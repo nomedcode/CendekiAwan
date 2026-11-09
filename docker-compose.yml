@@ -1,12 +1,12 @@
-name: cloudlens
+name: cendekiawan
 
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-cloudlens}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudlens}
-      POSTGRES_DB: ${POSTGRES_DB:-cloudlens}
+      POSTGRES_USER: ${POSTGRES_USER:-cendekiawan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cendekiawan}
+      POSTGRES_DB: ${POSTGRES_DB:-cendekiawan}
     ports:
       # loopback only, for running the backend/tests from the host in phase 1
       - "127.0.0.1:5432:5432"
