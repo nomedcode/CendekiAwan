@@ -24,7 +24,8 @@ services:
   floci:
     image: floci/floci:2.4.0
     ports:
-      - "4566:4566"
+      # loopback only: the emulator accepts dummy creds and mounts the docker socket
+      - "127.0.0.1:4566:4566"
     environment:
       FLOCI_SERVICES_UI_ENABLED: "false"
       FLOCI_STORAGE_MODE: persistent
