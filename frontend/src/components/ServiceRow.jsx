@@ -15,6 +15,23 @@ export default function ServiceRow({ row, onAction, onOpen, busy }) {
         title={`Cara kerja ${row.name}`}
       >
         <span className="svc">{row.name}</span>
+        <svg
+          className="chev"
+          viewBox="0 0 12 12"
+          width="10"
+          height="10"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M4 2.5 L8 6 L4 9.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         <span className="res">{row.resource}</span>
       </button>
       <div className="value-cell">

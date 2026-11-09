@@ -182,6 +182,28 @@ button {
   color: inherit;
   cursor: pointer;
   justify-self: start;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: center;
+  gap: 0 5px;
+}
+
+.row-open .res {
+  grid-column: 1 / -1;
+}
+
+.chev {
+  color: var(--muted);
+  transition:
+    transform 160ms ease,
+    color 160ms ease;
+}
+
+.row-open:hover .chev,
+.row-open:focus-visible .chev {
+  color: var(--ink-2);
+  transform: translateX(2px);
 }
 
 .row-open:hover .svc {
