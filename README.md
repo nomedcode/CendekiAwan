@@ -114,8 +114,6 @@ Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md
 
 ![Drawer mekanisme layanan](docs/screenshots/drawer.png)
 
-<img src="docs/screenshots/mobile.png" alt="Tampilan mobile 390 px" width="320" />
-
 ## Image Docker Hub
 
 - [`bangdemon/cendekiawan-backend`](https://hub.docker.com/r/bangdemon/cendekiawan-backend), tag `1.0.0` dan `latest`
