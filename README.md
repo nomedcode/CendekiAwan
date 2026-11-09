@@ -128,14 +128,9 @@ cendekiawan/
   backend/    app/{config,db,models,schemas,emulator,sampler,cache,main}.py
               app/routers/api.py  tests/  Dockerfile
   frontend/   src/{App,api,chart,styles.css,components/*}  nginx.conf  Dockerfile
-  docs/       lo1-analysis.md  verification.md  screenshots/
+  docs/       verification.md  screenshots/
   docker-compose.yml  .env.example  README.md
 ```
-
-## Analisis model layanan cloud (LO1)
-
-Lihat [`docs/lo1-analysis.md`](docs/lo1-analysis.md) untuk profil proyek, tabel lima model
-layanan (IaaS/PaaS/SaaS/BaaS/FaaS), dan analisis deployment public/private/hybrid/multi-cloud.
 
 ## Batasan
 
