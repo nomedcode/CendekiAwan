@@ -48,3 +48,29 @@ def test_event_with_nul_byte_is_422(client):
         json={"action": "bad\u0000action", "target": "x", "status": "ok"},
     )
     assert response.status_code == 422
+
+
+def test_action_rejects_unknown_resource_name(client):
+    response = client.post(
+        "/api/actions/simulate", json={"name": "not-our-queue", "count": 1}
+    )
+    assert response.status_code == 422
+
+
+def test_action_rejects_count_out_of_range(client):
+    assert (
+        client.post("/api/actions/simulate", json={"count": 0}).status_code == 422
+    )
+    assert (
+        client.post("/api/actions/simulate", json={"count": 101}).status_code == 422
+    )
+
+
+def test_simulate_returns_201_and_writes_audit(client, monkeypatch):
+    from app import emulator
+
+    monkeypatch.setattr(emulator, "send_messages", lambda count: {"sent": count})
+    response = client.post("/api/actions/simulate", json={"count": 3})
+    assert response.status_code == 201
+    assert response.json()["sent"] == 3
+    assert client.get("/api/events").json()[0]["action"] == "simulate"

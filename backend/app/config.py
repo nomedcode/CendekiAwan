@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # emulator (Floci exposes the LocalStack endpoint shape on :4566)
     floci_endpoint: str = "http://floci:4566"
     aws_region: str = "us-east-1"
+    # dummy values for the local emulator; never real AWS credentials
+    aws_access_key_id: str = "test"
+    aws_secret_access_key: str = "test"
 
     # allowlisted resource names, seeded at startup in phase 2
     sqs_queue: str = "cendekiawan-queue"

@@ -23,6 +23,11 @@ class AuditEventIn(BaseModel):
         return _reject_control_chars(value)
 
 
+class ActionRequest(BaseModel):
+    count: int = Field(default=1, ge=1, le=100)
+    name: str | None = Field(default=None, max_length=128)
+
+
 class AuditEventOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
