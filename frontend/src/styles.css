@@ -182,15 +182,11 @@ button {
   color: inherit;
   cursor: pointer;
   justify-self: start;
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: start;
-  align-items: center;
-  gap: 0 5px;
 }
 
-.row-open .res {
-  grid-column: 1 / -1;
+.row-open .chev {
+  margin-left: 5px;
+  vertical-align: middle;
 }
 
 .chev {
