@@ -10,6 +10,7 @@ import DepthChart from "./components/DepthChart";
 import EventFeed from "./components/EventFeed";
 import FanoutGraph from "./components/FanoutGraph";
 import ServiceRow from "./components/ServiceRow";
+import ServiceDrawer from "./components/ServiceDrawer";
 import Status from "./components/Status";
 
 const nf = new Intl.NumberFormat("id-ID");
@@ -36,6 +37,8 @@ export default function App() {
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
   const [busy, setBusy] = useState(null);
+  const [openKey, setOpenKey] = useState(null);
+  const [runId, setRunId] = useState(0);
 
   const refresh = useCallback(async () => {
     try {
@@ -103,6 +106,7 @@ export default function App() {
       try {
         await runAction(action, { count: action === "invoke" ? 1 : 10 });
         await refresh();
+        setRunId((value) => value + 1);
       } catch {
         setError(`Aksi ${action} gagal — cek emulator di :4566.`);
       } finally {
@@ -230,7 +234,13 @@ export default function App() {
       <section className="board" aria-label="Lima service">
         {rows.length
           ? rows.map((row) => (
-              <ServiceRow key={row.key} row={row} onAction={act} busy={busy} />
+              <ServiceRow
+                key={row.key}
+                row={row}
+                onAction={act}
+                onOpen={() => setOpenKey(row.key)}
+                busy={busy}
+              />
             ))
           : Array.from({ length: 5 }, (_, index) => (
               <div className="skeleton" key={index} />
@@ -268,6 +278,16 @@ export default function App() {
         <p className="sub">ditulis ke Postgres · 12 terbaru</p>
         <EventFeed events={events} />
       </section>
+
+      {openKey ? (
+        <ServiceDrawer
+          row={rows.find((row) => row.key === openKey)}
+          runId={runId}
+          busy={busy}
+          onAction={act}
+          onClose={() => setOpenKey(null)}
+        />
+      ) : null}
     </main>
   );
 }

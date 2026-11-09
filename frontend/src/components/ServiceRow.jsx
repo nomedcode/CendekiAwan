@@ -1,6 +1,6 @@
 import Sparkline from "./Sparkline";
 
-export default function ServiceRow({ row, onAction, busy }) {
+export default function ServiceRow({ row, onAction, onOpen, busy }) {
   const down = row.status !== "ok";
   return (
     <div
@@ -8,10 +8,15 @@ export default function ServiceRow({ row, onAction, busy }) {
       style={{ "--accent": row.accent }}
     >
       <span className="accent" aria-hidden="true" />
-      <div className="row-id">
+      <button
+        className="row-open"
+        onClick={onOpen}
+        aria-haspopup="dialog"
+        title={`Cara kerja ${row.name}`}
+      >
         <span className="svc">{row.name}</span>
         <span className="res">{row.resource}</span>
-      </div>
+      </button>
       <div className="value-cell">
         <span className="value" key={row.value}>
           {row.value}

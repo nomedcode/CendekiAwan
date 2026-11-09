@@ -84,6 +84,7 @@ docker compose --profile tools up -d adminer   # http://localhost:8081
 3. Klik "Publish". SNS mengirim pesan ke queue dan depth naik lagi.
 4. Klik "Invoke". Lambda berjalan di container dan durasinya muncul di baris.
 5. Grafik SQS menampilkan perubahan nyata, bukan data contoh.
+6. Klik nama service untuk membuka diagram cara kerjanya. Animasi berjalan saat aksinya dijalankan.
 
 ## Bukti verifikasi
 

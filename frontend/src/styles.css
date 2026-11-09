@@ -160,16 +160,33 @@ button {
   opacity: 0.6;
 }
 
-.row-id .svc {
+.row-id .svc,
+.row-open .svc {
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
-.row-id .res {
+.row-id .res,
+.row-open .res {
   display: block;
   color: var(--muted);
   font-size: 11px;
   font-family: var(--mono);
+}
+
+.row-open {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  justify-self: start;
+}
+
+.row-open:hover .svc {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .value-cell {
@@ -467,7 +484,8 @@ details.data th {
     grid-area: accent;
   }
 
-  .row .row-id {
+  .row .row-id,
+  .row .row-open {
     grid-area: id;
   }
 
@@ -508,5 +526,133 @@ details.data th {
   * {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: flex-end;
+  animation: fade 160ms ease-out;
+}
+
+.drawer {
+  width: min(580px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--surface);
+  border-left: 1px solid var(--hairline);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  animation: slide 220ms ease-out;
+}
+
+.drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.drawer-head h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.drawer-head p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-family: var(--mono);
+}
+
+.drawer-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 10px 0;
+}
+
+.drawer-value .secondary {
+  margin-left: auto;
+}
+
+.diagram {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.diagram .node {
+  fill: var(--surface-2);
+  stroke: var(--axis);
+  stroke-width: 1;
+}
+
+.diagram .wire {
+  stroke: var(--axis);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.diagram text {
+  fill: var(--ink-2);
+  font-size: 11px;
+}
+
+.diagram .sub {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 9.5px;
+}
+
+.diagram .packet {
+  fill: var(--accent, var(--s1));
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.steps li::marker {
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.drawer-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
   }
 }
