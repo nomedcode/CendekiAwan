@@ -5,7 +5,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from .. import emulator
+from .. import cache, emulator
 from ..config import settings
 from ..db import get_db
 from ..models import AuditEvent, MetricSnapshot
@@ -49,14 +49,25 @@ def health(db: Session = Depends(get_db)) -> dict:
         emulator_status = "ok"
     except Exception:  # noqa: BLE001 - reported, not fatal
         emulator_status = "down"
+    try:
+        cache.ping()
+        redis_status = "ok"
+    except Exception:  # noqa: BLE001 - reported, not fatal
+        redis_status = "down"
     return {
         "status": "ok",
-        "checks": {"db": "ok", "emulator": emulator_status},
+        "checks": {"db": "ok", "emulator": emulator_status, "redis": redis_status},
     }
+
+
+_SNAPSHOT_KEY = "snapshot:v1"
 
 
 @router.get("/api/snapshot")
 def get_snapshot(db: Session = Depends(get_db)) -> dict:
+    cached = cache.get(_SNAPSHOT_KEY)
+    if cached is not None:
+        return cached
     data = emulator.snapshot()
     lambda_state = data.setdefault("lambda", {"status": "down"})
     lambda_state["invocations"] = int(
@@ -67,6 +78,7 @@ def get_snapshot(db: Session = Depends(get_db)) -> dict:
         )
         or 0
     )
+    cache.set(_SNAPSHOT_KEY, data, ttl=2)
     return data
 
 

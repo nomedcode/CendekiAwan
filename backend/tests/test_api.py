@@ -74,3 +74,25 @@ def test_simulate_returns_201_and_writes_audit(client, monkeypatch):
     assert response.status_code == 201
     assert response.json()["sent"] == 3
     assert client.get("/api/events").json()[0]["action"] == "simulate"
+
+
+def test_snapshot_returns_cached_payload_without_calling_emulator(client, monkeypatch):
+    from app import emulator
+    from app.routers import api
+
+    cached = {
+        "sqs": {"status": "ok", "depth": 7},
+        "s3": {"status": "ok", "objects": 1},
+        "sns": {"status": "ok", "subscriptions": 1},
+        "dynamodb": {"status": "ok", "items": 2},
+        "lambda": {"status": "ok", "invocations": 0},
+    }
+    monkeypatch.setattr(api.cache, "get", lambda key: cached)
+
+    def boom():
+        raise AssertionError("emulator should not be called on a cache hit")
+
+    monkeypatch.setattr(emulator, "snapshot", boom)
+    response = client.get("/api/snapshot")
+    assert response.status_code == 200
+    assert response.json()["sqs"]["depth"] == 7

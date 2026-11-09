@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 
-from . import emulator, sampler
+from . import cache, emulator, sampler
 from .db import Base, engine
 from .routers.api import router
 
@@ -31,6 +31,7 @@ async def lifespan(_: FastAPI):
         for task in tasks:
             with suppress(asyncio.CancelledError):
                 await task
+        cache.close()
 
 
 app = FastAPI(title="CendekiAwan", version="0.1.0", lifespan=lifespan)
