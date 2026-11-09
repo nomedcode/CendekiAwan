@@ -13,5 +13,5 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="CloudLens", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="CendekiAwan", version="0.1.0", lifespan=lifespan)
 app.include_router(router)

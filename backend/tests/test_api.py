@@ -7,7 +7,7 @@ def test_health_reports_db_ok(client):
 def test_create_event_returns_201(client):
     response = client.post(
         "/api/events",
-        json={"action": "simulate", "target": "cloudlens-queue", "status": "ok"},
+        json={"action": "simulate", "target": "cendekiawan-queue", "status": "ok"},
     )
     assert response.status_code == 201
     assert response.json()["id"] == 1
@@ -16,7 +16,7 @@ def test_create_event_returns_201(client):
 def test_created_event_is_persisted(client):
     client.post(
         "/api/events",
-        json={"action": "simulate", "target": "cloudlens-queue", "status": "ok"},
+        json={"action": "simulate", "target": "cendekiawan-queue", "status": "ok"},
     )
     response = client.get("/api/events")
     assert response.status_code == 200
