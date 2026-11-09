@@ -86,6 +86,15 @@ docker compose --profile tools up -d adminer   # http://localhost:8081
 5. Grafik SQS menampilkan perubahan nyata, bukan data contoh.
 6. Klik nama service untuk membuka diagram cara kerjanya. Animasi berjalan saat aksinya dijalankan.
 
+## Aksesibilitas dan perilaku UI
+
+- Chart memakai sumbu waktu nyata dari `captured_at`, tick bulat, dan viewBox yang mengikuti lebar panel. Label sumbu tetap 11 px di mobile.
+- Di layar ≤900 px, baris service tetap menampilkan status sekunder dan sparkline; badge sumber disembunyikan agar tidak berdesakan.
+- Drawer mekanisme bisa ditutup dengan Esc, fokus terkunci di dalam dialog, dan kembali ke baris pemicu saat ditutup. Body tidak ikut scroll.
+- Status header bertiga: `pending` (abu-abu) sebelum respons pertama, `ok` (hijau), dan `down` (merah). Baris down tidak diredupkan; latar diberi tint merah tipis agar teks tetap lolos kontras.
+- Banner error membedakan kegagalan data dan aksi, punya tombol Coba lagi/Tutup, dan tidak hilang sendiri. Jika `/api/metrics` gagal, chart menampilkan data terakhir dengan label peringatan.
+- `prefers-reduced-motion` menonaktifkan animasi CSS dan paket diagram; skip link, `:focus-visible`, `aria-label`, dan `theme-color` tersedia.
+
 ## Bukti verifikasi
 
 Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md):
@@ -94,6 +103,10 @@ Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md
 ## Screenshot
 
 ![Dashboard desktop](docs/screenshots/desktop.png)
+
+![Drawer mekanisme service](docs/screenshots/drawer.png)
+
+<img src="docs/screenshots/mobile.png" alt="Tampilan mobile 390 px" width="320" />
 
 ## Image Docker Hub
 
@@ -106,7 +119,7 @@ Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md
 cendekiawan/
   backend/    app/{config,db,models,schemas,emulator,sampler,cache,main}.py
               app/routers/api.py  tests/  Dockerfile
-  frontend/   src/{App,api,styles.css,components/*}  nginx.conf  Dockerfile
+  frontend/   src/{App,api,chart,styles.css,components/*}  nginx.conf  Dockerfile
   docs/       lo1-analysis.md  verification.md  screenshots/
   docker-compose.yml  .env.example  README.md
 ```
@@ -126,6 +139,15 @@ layanan (IaaS/PaaS/SaaS/BaaS/FaaS), dan analisis deployment public/private/hybri
   CloudWatch dan diperbarui sekali per menit; kartu menampilkan label sumbernya.
 - DynamoDB item count dihitung dengan `Scan Select=COUNT` karena `DescribeTable.ItemCount`
   tidak dapat diandalkan. Tabel demo dibatasi kecil.
+- Dashboard ini bukan pengganti observability produksi: tidak ada time-range picker,
+  threshold/alert, anotasi event, atau export. Fokusnya demo lima layanan.
+
+## Pengujian
+
+```bash
+cd backend && pytest        # 12 tes API
+cd frontend && npm test     # 8 tes helper chart (node:test)
+```
 
 ## Persistensi: `down` vs `down -v`
 
@@ -139,6 +161,6 @@ layanan (IaaS/PaaS/SaaS/BaaS/FaaS), dan analisis deployment public/private/hybri
 
 Claude Code dipakai untuk scaffold, implementasi backend dan frontend, penulisan tes,
 konfigurasi Docker, serta penyusunan dokumen ini. Semua hasil dijalankan dan diperiksa di
-mesin pengembang: `docker compose up -d --build`, `pytest` (12 tes), curl endpoint, uji
-persistensi, dan screenshot browser. Tidak ada kredensial asli yang dipakai atau disimpan;
-nilai AWS di `.env.example` hanya dummy untuk emulator lokal.
+mesin pengembang: `docker compose up -d --build`, `pytest` (12 tes), `npm test` (8 tes),
+curl endpoint, uji persistensi, dan screenshot browser. Tidak ada kredensial asli yang
+dipakai atau disimpan; nilai AWS di `.env.example` hanya dummy untuk emulator lokal.

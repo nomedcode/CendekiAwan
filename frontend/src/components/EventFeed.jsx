@@ -21,12 +21,15 @@ export default function EventFeed({ events }) {
     <div className="feed">
       {events.map((event) => (
         <div className="feed-row" key={event.id}>
-          <time>{clock(event.created_at)}</time>
+          <time dateTime={event.created_at}>{clock(event.created_at)}</time>
           <span className="act">{event.action}</span>
           <span className="tgt" title={event.target}>
             {event.target}
           </span>
-          <Status ok={event.status === "ok"} label={event.status} />
+          <Status
+            state={event.status === "ok" ? "ok" : "down"}
+            label={event.status}
+          />
         </div>
       ))}
     </div>

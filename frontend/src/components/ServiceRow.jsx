@@ -45,10 +45,15 @@ export default function ServiceRow({ row, onAction, onOpen, busy }) {
       <span className="badge">{down ? "down" : row.source}</span>
       <button
         className="action"
-        onClick={() => onAction(row.action)}
-        disabled={busy === row.action || down}
+        onClick={() => {
+          if (busy === row.action || down) return;
+          onAction(row.action);
+        }}
+        disabled={down}
+        aria-disabled={busy === row.action || down}
+        aria-busy={busy === row.action}
       >
-        {busy === row.action ? "mengirim…" : row.actionLabel}
+        {busy === row.action ? row.busyLabel : row.actionLabel}
       </button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DIAGRAMS = {
   sqs: {
@@ -95,6 +95,17 @@ function useReducedMotion() {
 export default function ServiceDiagram({ service, runId }) {
   const diagram = DIAGRAMS[service];
   const reduced = useReducedMotion();
+  const lastRun = useRef(runId);
+  const [packet, setPacket] = useState(0);
+
+  useEffect(() => {
+    if (runId === lastRun.current) return;
+    lastRun.current = runId;
+    setPacket(runId);
+    const timer = setTimeout(() => setPacket(0), 1500);
+    return () => clearTimeout(timer);
+  }, [runId]);
+
   if (!diagram) return null;
 
   return (
@@ -130,8 +141,8 @@ export default function ServiceDiagram({ service, runId }) {
           </text>
         </g>
       ))}
-      {reduced ? null : (
-        <circle key={runId} r="5" className="packet">
+      {!reduced && packet ? (
+        <circle key={packet} r="5" className="packet">
           <animateMotion
             dur="1.4s"
             fill="freeze"
@@ -139,7 +150,7 @@ export default function ServiceDiagram({ service, runId }) {
             path={diagram.motion}
           />
         </circle>
-      )}
+      ) : null}
     </svg>
   );
 }
