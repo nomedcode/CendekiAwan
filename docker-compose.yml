@@ -1,5 +1,20 @@
 name: cendekiawan
 
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cendekiawan}:${POSTGRES_PASSWORD:-cendekiawan}@db:5432/${POSTGRES_DB:-cendekiawan}
+  REDIS_URL: redis://redis:6379/0
+  FLOCI_ENDPOINT: http://floci:4566
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+  SQS_QUEUE: ${SQS_QUEUE:-cendekiawan-queue}
+  S3_BUCKET: ${S3_BUCKET:-cendekiawan-bucket}
+  SNS_TOPIC: ${SNS_TOPIC:-cendekiawan-topic}
+  DYNAMODB_TABLE: ${DYNAMODB_TABLE:-cendekiawan-table}
+  LAMBDA_FUNCTION: ${LAMBDA_FUNCTION:-cendekiawan-fn}
+  SAMPLE_INTERVAL_SECONDS: ${SAMPLE_INTERVAL_SECONDS:-5}
+  CLOUDWATCH_INTERVAL_SECONDS: ${CLOUDWATCH_INTERVAL_SECONDS:-60}
+
 services:
   db:
     image: postgres:16-alpine
@@ -8,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cendekiawan}
       POSTGRES_DB: ${POSTGRES_DB:-cendekiawan}
     ports:
-      # loopback only, for running the backend/tests from the host in phase 1
+      # loopback only, for psql / Adminer from the host
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -44,9 +59,74 @@ services:
     networks:
       - appnet
 
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - rediscache:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - appnet
+
+  backend:
+    build:
+      context: ./backend
+    environment: *backend-env
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      floci:
+        condition: service_started
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - appnet
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - appnet
+
+  adminer:
+    image: adminer:4.8.1
+    profiles: ["tools"]
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - appnet
+
 volumes:
   pgdata:
   flocidata:
+  rediscache:
 
 networks:
   appnet:
