@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # storage
-    database_url: str = "postgresql+psycopg://cendekiawan:cendekiawan@db:5432/cendekiawan"
+    database_url: str = "postgresql+psycopg://cendekiawan:cendekiawan@localhost:5432/cendekiawan"
     redis_url: str = "redis://redis:6379/0"
 
     # emulator (Floci exposes the LocalStack endpoint shape on :4566)

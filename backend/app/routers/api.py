@@ -42,6 +42,7 @@ def create_event(payload: AuditEventIn, db: Session = Depends(get_db)):
 @router.get("/api/metrics", response_model=list[MetricPoint])
 def list_metrics(
     minutes: int = Query(default=15, ge=1, le=1440),
+    limit: int = Query(default=2000, ge=1, le=5000),
     service: str | None = Query(default=None, max_length=32),
     db: Session = Depends(get_db),
 ):
@@ -50,6 +51,7 @@ def list_metrics(
         select(MetricSnapshot)
         .where(MetricSnapshot.captured_at >= since)
         .order_by(MetricSnapshot.captured_at)
+        .limit(limit)
     )
     if service:
         stmt = stmt.where(MetricSnapshot.service == service)

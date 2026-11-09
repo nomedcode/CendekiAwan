@@ -36,3 +36,15 @@ def test_metrics_returns_empty_list(client):
 
 def test_metrics_window_out_of_range_is_422(client):
     assert client.get("/api/metrics?minutes=0").status_code == 422
+
+
+def test_metrics_limit_out_of_range_is_422(client):
+    assert client.get("/api/metrics?limit=0").status_code == 422
+
+
+def test_event_with_nul_byte_is_422(client):
+    response = client.post(
+        "/api/events",
+        json={"action": "bad\u0000action", "target": "x", "status": "ok"},
+    )
+    assert response.status_code == 422
