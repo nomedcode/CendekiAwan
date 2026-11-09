@@ -1,6 +1,6 @@
-# Bukti Verifikasi — CendekiAwan
+# Bukti verifikasi: CendekiAwan
 
-Semua perintah dijalankan di Windows 11, Docker Desktop, dari akar repo.
+Semua perintah dijalankan di Windows 11 dengan Docker Desktop, dari akar repo.
 
 ## 1. Stack berjalan dan sehat
 
@@ -9,7 +9,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Output (ringkas):
+Output ringkas:
 
 ```text
 backend  | Up (healthy) | 8000/tcp
@@ -46,11 +46,11 @@ HTTP/1.1 201 Created
 {"action":"simulate","target":"cendekiawan-queue","sent":10}
 ```
 
-Aksi lain yang diuji: `publish` (SNS → SQS fanout), `upload` (S3), `item` (DynamoDB),
-`invoke` (Lambda, durasi ±54 ms pada invoke pertama setelah cold start).
+Aksi lain yang diuji: `publish` (SNS ke SQS, fanout), `upload` (S3), `item` (DynamoDB),
+dan `invoke` (Lambda; durasi ±54 ms pada invoke pertama setelah cold start).
 
-Validasi input: `{"count":0}` dan `{"name":"not-our-queue"}` → **422**.
-Karakter NUL pada body → **422** (bukan 500).
+Validasi input: `{"count":0}` dan `{"name":"not-our-queue"}` ditolak dengan 422. Body
+dengan karakter NUL juga ditolak dengan 422, bukan 500.
 
 ## 4. Persistensi: `down` vs `down -v`
 
@@ -72,9 +72,9 @@ S3 objek            : 3
 SQS depth           : 26
 ```
 
-Artinya named volume `pgdata` **dan** `flocidata` sama-sama mempertahankan data.
+Named volume `pgdata` dan `flocidata` sama-sama mempertahankan data.
 
-Penjelasan: `docker compose down` hanya menghentikan container; volume tetap ada.
+`docker compose down` hanya menghentikan container; volume tetap ada.
 `docker compose down -v` menghapus `pgdata`, `flocidata`, dan `rediscache`, sehingga
 semua data demo hilang dan resource di-seed ulang saat start berikutnya.
 
@@ -91,7 +91,7 @@ keyspace_hits:24
 keyspace_misses:1
 ```
 
-Cache benar-benar dipakai (TTL 2 detik) dan healthcheck `redis-cli ping` aktif.
+Cache dipakai (TTL 2 detik) dan healthcheck `redis-cli ping` aktif.
 
 ## 6. Build dan ukuran image
 
@@ -105,7 +105,7 @@ cendekiawan-frontend:latest   73.9 MB
 ```
 
 Backend memakai multi-stage `builder → runtime` dan berjalan sebagai user non-root
-(`uid 10001`). Frontend memakai `node:22-alpine` untuk build lalu `nginx:1.27-alpine`
+(`uid 10001`). Frontend memakai `node:22-alpine` untuk build, lalu `nginx:1.27-alpine`
 untuk runtime.
 
 ## 7. Tes otomatis
@@ -119,8 +119,8 @@ cd backend && pytest
 ```
 
 Mencakup health, create/list event, rentang `limit`/`minutes`, validasi NUL, aksi dengan
-nama resource tidak dikenal, aksi dengan `count` di luar rentang, aksi sukses + audit,
-dan snapshot dari cache tanpa memanggil emulator.
+nama resource tidak dikenal, aksi dengan `count` di luar rentang, aksi sukses beserta
+audit, dan snapshot dari cache tanpa memanggil emulator.
 
 ## 8. Docker Hub
 

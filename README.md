@@ -1,8 +1,8 @@
 # CendekiAwan
 
 Dashboard telemetri live untuk lima layanan AWS yang berjalan lokal di
-[Floci](https://github.com/floci-io/floci), emulator AWS berlisensi MIT tanpa akun dan
-tanpa auth token. Satu halaman dan satu perintah Docker Compose, tanpa biaya.
+[Floci](https://github.com/floci-io/floci), emulator AWS berlisensi MIT yang tidak
+memerlukan akun atau auth token. Satu halaman, satu perintah Docker Compose, tanpa biaya.
 
 Lima layanan yang ditampilkan: SQS, S3, SNS, DynamoDB, dan Lambda.
 
@@ -83,17 +83,25 @@ docker compose --profile tools up -d adminer   # http://localhost:8081
 2. Klik "Kirim pesan". SQS depth naik 10 dalam 8 detik atau kurang, dan feed audit mencatat `simulate ok`.
 3. Klik "Publish". SNS mengirim pesan ke queue dan depth naik lagi.
 4. Klik "Invoke". Lambda berjalan di container dan durasinya muncul di baris.
-5. Grafik SQS menampilkan perubahan nyata, bukan data contoh.
+5. Grafik SQS menampilkan perubahan dari sampel nyata.
 6. Klik nama service untuk membuka diagram cara kerjanya. Animasi berjalan saat aksinya dijalankan.
 
 ## Aksesibilitas dan perilaku UI
 
-- Chart memakai sumbu waktu nyata dari `captured_at`, tick bulat, dan viewBox yang mengikuti lebar panel. Label sumbu tetap 11 px di mobile.
-- Di layar ≤900 px, baris service tetap menampilkan status sekunder dan sparkline; badge sumber disembunyikan agar tidak berdesakan.
-- Drawer mekanisme bisa ditutup dengan Esc, fokus terkunci di dalam dialog, dan kembali ke baris pemicu saat ditutup. Body tidak ikut scroll.
-- Status header bertiga: `pending` (abu-abu) sebelum respons pertama, `ok` (hijau), dan `down` (merah). Baris down tidak diredupkan; latar diberi tint merah tipis agar teks tetap lolos kontras.
-- Banner error membedakan kegagalan data dan aksi, punya tombol Coba lagi/Tutup, dan tidak hilang sendiri. Jika `/api/metrics` gagal, chart menampilkan data terakhir dengan label peringatan.
-- `prefers-reduced-motion` menonaktifkan animasi CSS dan paket diagram; skip link, `:focus-visible`, `aria-label`, dan `theme-color` tersedia.
+- Chart memakai sumbu waktu dari `captured_at` dan tick bulat. `viewBox` mengikuti lebar
+  panel, jadi label sumbu tetap 11 px di mobile.
+- Di layar ≤900 px, baris service masih menampilkan status sekunder dan sparkline. Badge
+  sumber disembunyikan agar tidak berdesakan.
+- Drawer mekanisme bisa ditutup dengan Esc. Fokus terkunci di dalam dialog dan kembali ke
+  baris pemicu saat ditutup; body tidak ikut scroll.
+- Status header punya tiga keadaan: `pending` (abu-abu) sebelum respons pertama, `ok`
+  (hijau), dan `down` (merah). Baris down tidak diredupkan; latarnya diberi tint merah
+  tipis agar teks tetap lolos kontras.
+- Banner error membedakan kegagalan data dan aksi. Error aksi tetap tampil sampai aksinya
+  diulang atau ditutup; error data hilang setelah poll berikutnya berhasil. Kalau
+  `/api/metrics` gagal, chart menampilkan data terakhir dengan label peringatan.
+- `prefers-reduced-motion` menonaktifkan animasi CSS dan paket diagram. Skip link,
+  `:focus-visible`, `aria-label`, dan `theme-color` tersedia.
 
 ## Bukti verifikasi
 
@@ -104,7 +112,7 @@ Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md
 
 ![Dashboard desktop](docs/screenshots/desktop.png)
 
-![Drawer mekanisme service](docs/screenshots/drawer.png)
+![Drawer mekanisme layanan](docs/screenshots/drawer.png)
 
 <img src="docs/screenshots/mobile.png" alt="Tampilan mobile 390 px" width="320" />
 
@@ -132,15 +140,15 @@ layanan (IaaS/PaaS/SaaS/BaaS/FaaS), dan analisis deployment public/private/hybri
 ## Batasan
 
 - UI di `8080`, emulator di `127.0.0.1:4566`, database di `127.0.0.1:5432`. Tidak ada
-  autentikasi; proyek ini alat lokal dan tidak dimaksudkan sebagai layanan publik.
+  autentikasi; proyek ini adalah alat lokal dan tidak dimaksudkan sebagai layanan publik.
 - Floci menerima kredensial apa pun. Nilai di `.env.example` bukan kredensial AWS asli dan
   tidak boleh diganti dengan yang asli.
 - Perilaku mengikuti Floci. Metrik `ApproximateAgeOfOldestMessage` hanya tersedia lewat
   CloudWatch dan diperbarui sekali per menit; kartu menampilkan label sumbernya.
 - DynamoDB item count dihitung dengan `Scan Select=COUNT` karena `DescribeTable.ItemCount`
   tidak dapat diandalkan. Tabel demo dibatasi kecil.
-- Dashboard ini bukan pengganti observability produksi: tidak ada time-range picker,
-  threshold/alert, anotasi event, atau export. Fokusnya demo lima layanan.
+- Dashboard ini adalah demo lima layanan. Tidak ada time-range picker, threshold/alert,
+  anotasi event, atau export.
 
 ## Pengujian
 
@@ -157,7 +165,7 @@ cd frontend && npm test     # 8 tes helper chart (node:test)
 - `docker compose down -v`: named volume `pgdata`, `flocidata`, dan `rediscache` dihapus.
   Data demo hilang dan resource di-seed ulang saat start berikutnya.
 
-## AI Usage Declaration
+## Deklarasi penggunaan AI
 
 Claude Code dipakai untuk scaffold, implementasi backend dan frontend, penulisan tes,
 konfigurasi Docker, serta penyusunan dokumen ini. Semua hasil dijalankan dan diperiksa di
