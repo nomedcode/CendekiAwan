@@ -63,7 +63,7 @@ def get_snapshot(db: Session = Depends(get_db)) -> dict:
         db.scalar(
             select(func.count())
             .select_from(AuditEvent)
-            .where(AuditEvent.action == "invoke")
+            .where(AuditEvent.action == "invoke", AuditEvent.status == "ok")
         )
         or 0
     )
