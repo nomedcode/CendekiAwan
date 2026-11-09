@@ -1,11 +1,8 @@
 # CendekiAwan
 ![Dashboard desktop](docs/screenshots/desktop.png)
 
-![Drawer mekanisme layanan](docs/screenshots/drawer.png)
-
 Dashboard telemetri live untuk lima layanan AWS yang berjalan lokal di
-[Floci](https://github.com/floci-io/floci), emulator AWS berlisensi MIT yang tidak
-memerlukan akun atau auth token. Satu halaman, satu perintah Docker Compose, tanpa biaya.
+[Floci](https://github.com/floci-io/floci), emulator AWS yang berjalan di lokal.
 
 Lima layanan yang ditampilkan: SQS, S3, SNS, DynamoDB, dan Lambda.
 
