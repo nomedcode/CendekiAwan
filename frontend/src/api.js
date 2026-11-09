@@ -13,7 +13,18 @@ export const getMetrics = (minutes = 15) =>
 export const getEvents = (limit = 12) =>
   fetch(`/api/events?limit=${limit}`).then(json);
 
-export const getHealth = () => fetch("/health").then(json);
+export async function getHealth() {
+  const response = await fetch("/health");
+  const body = await response.json().catch(() => null);
+  if (body?.checks) return body;
+  if (body?.detail?.db) {
+    return { status: "error", checks: { db: body.detail.db } };
+  }
+  return {
+    status: response.ok ? "ok" : "error",
+    checks: response.ok ? {} : { db: "error" },
+  };
+}
 
 export const runAction = (action, body = {}) =>
   fetch(`/api/actions/${action}`, {

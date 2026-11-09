@@ -10,6 +10,7 @@ import DepthChart from "./components/DepthChart";
 import EventFeed from "./components/EventFeed";
 import FanoutGraph from "./components/FanoutGraph";
 import ServiceRow from "./components/ServiceRow";
+import ServiceDrawer from "./components/ServiceDrawer";
 import Status from "./components/Status";
 
 const nf = new Intl.NumberFormat("id-ID");
@@ -28,29 +29,44 @@ function clock(value) {
   });
 }
 
+function checkState(value) {
+  if (value == null) return "pending";
+  return value === "ok" ? "ok" : "down";
+}
+
 export default function App() {
   const [snapshot, setSnapshot] = useState(null);
   const [metrics, setMetrics] = useState([]);
   const [events, setEvents] = useState([]);
   const [health, setHealth] = useState(null);
-  const [error, setError] = useState(null);
+  const [dataError, setDataError] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [metricsError, setMetricsError] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [busy, setBusy] = useState(null);
+  const [openKey, setOpenKey] = useState(null);
+  const [runId, setRunId] = useState(0);
+  const [lastAction, setLastAction] = useState(null);
 
   const refresh = useCallback(async () => {
-    try {
-      const [snap, ev, h] = await Promise.all([
-        getSnapshot(),
-        getEvents(),
-        getHealth(),
-      ]);
-      setSnapshot(snap);
-      setEvents(ev);
-      setHealth(h);
+    const [snapshotResult, eventsResult, healthResult] = await Promise.allSettled(
+      [getSnapshot(), getEvents(), getHealth()],
+    );
+
+    if (snapshotResult.status === "fulfilled") setSnapshot(snapshotResult.value);
+    if (eventsResult.status === "fulfilled") setEvents(eventsResult.value);
+    setHealth(healthResult.status === "fulfilled" ? healthResult.value : null);
+
+    const failed = [];
+    if (snapshotResult.status === "rejected") failed.push("snapshot");
+    if (eventsResult.status === "rejected") failed.push("audit log");
+    if (failed.length) {
+      setDataError(
+        `${failed.join(" dan ")} gagal dimuat — cek container backend.`,
+      );
+    } else {
+      setDataError(null);
       setLastSync(new Date());
-      setError(null);
-    } catch {
-      setError("Backend tidak merespons. Pastikan API :8000 dan Floci :4566 hidup.");
     }
   }, []);
 
@@ -74,9 +90,12 @@ export default function App() {
     const tick = async () => {
       try {
         const data = await getMetrics(15);
-        if (alive) setMetrics(data);
+        if (alive) {
+          setMetrics(data);
+          setMetricsError(false);
+        }
       } catch {
-        /* the snapshot poll already surfaces the error */
+        if (alive) setMetricsError(true);
       }
       if (alive) timer = setTimeout(tick, 10000);
     };
@@ -100,17 +119,23 @@ export default function App() {
   const act = useCallback(
     async (action) => {
       setBusy(action);
+      setLastAction(action);
       try {
         await runAction(action, { count: action === "invoke" ? 1 : 10 });
+        setActionError(null);
+        setLastAction(null);
         await refresh();
+        setRunId((value) => value + 1);
       } catch {
-        setError(`Aksi ${action} gagal — cek emulator di :4566.`);
+        setActionError(`Aksi ${action} gagal — cek emulator di :4566.`);
       } finally {
         setBusy(null);
       }
     },
     [refresh],
   );
+
+  const closeDrawer = useCallback(() => setOpenKey(null), []);
 
   const rows = useMemo(() => {
     if (!snapshot) return [];
@@ -129,6 +154,7 @@ export default function App() {
         source: "live",
         action: "simulate",
         actionLabel: "Kirim pesan",
+        busyLabel: "mengirim…",
       },
       {
         key: "s3",
@@ -143,6 +169,7 @@ export default function App() {
         source: "live",
         action: "upload",
         actionLabel: "Upload",
+        busyLabel: "mengunggah…",
       },
       {
         key: "sns",
@@ -157,6 +184,7 @@ export default function App() {
         source: "live",
         action: "publish",
         actionLabel: "Publish",
+        busyLabel: "menerbitkan…",
       },
       {
         key: "dynamodb",
@@ -171,6 +199,7 @@ export default function App() {
         source: "derived",
         action: "item",
         actionLabel: "Tulis item",
+        busyLabel: "menulis…",
       },
       {
         key: "lambda",
@@ -190,84 +219,132 @@ export default function App() {
         source: "live",
         action: "invoke",
         actionLabel: "Invoke",
+        busyLabel: "memanggil…",
       },
     ];
   }, [snapshot, bySeries]);
 
   const age = bySeries.get("sqs.oldest_message_age")?.at(-1)?.v;
+  const banner = [actionError, dataError].filter(Boolean).join(" ");
 
   return (
-    <main className="shell">
-      <header className="top">
-        <div className="brand">
-          <h1>CendekiAwan</h1>
-          <p>Telemetri cloud lokal · Floci :4566</p>
-        </div>
-        <div className="head-right">
-          <Status
-            ok={health?.checks?.db === "ok"}
-            label={`db ${health?.checks?.db ?? "…"}`}
-          />
-          <Status
-            ok={health?.checks?.emulator === "ok"}
-            label={`emulator ${health?.checks?.emulator ?? "…"}`}
-          />
-          <span className="sync">
-            {lastSync ? `sync ${clock(lastSync)}` : "menunggu…"}
-          </span>
-        </div>
-      </header>
-
-      {error ? (
-        <div className="banner" role="alert">
-          <span>{error}</span>
-          <button className="action" onClick={refresh}>
-            Coba lagi
-          </button>
-        </div>
-      ) : null}
-
-      <section className="board" aria-label="Lima service">
-        {rows.length
-          ? rows.map((row) => (
-              <ServiceRow key={row.key} row={row} onAction={act} busy={busy} />
-            ))
-          : Array.from({ length: 5 }, (_, index) => (
-              <div className="skeleton" key={index} />
-            ))}
-      </section>
-
-      <section className="split">
-        <div className="panel">
-          <h2>SQS depth — 15 menit</h2>
-          <p className="sub">
-            sumber GetQueueAttributes · sampel 5 dtk
-            {age != null
-              ? ` · umur tertua ${Math.round(age)} dtk (CloudWatch 60 dtk)`
-              : ""}
-          </p>
-          <DepthChart points={bySeries.get("sqs.depth") ?? []} />
-        </div>
-        <div className="panel">
-          <h2>SNS fanout</h2>
-          <p className="sub">topic → queue · subscription aktif</p>
-          {snapshot?.sns?.status === "ok" ? (
-            <FanoutGraph
-              topic={snapshot.sns.topic}
-              queue={snapshot.sqs?.queue ?? "queue"}
-              subscriptions={snapshot.sns.subscriptions}
+    <>
+      <a className="skip" href="#main">
+        Lewati ke konten utama
+      </a>
+      <main className="shell" id="main">
+        <header className="top">
+          <div className="brand">
+            <h1>CendekiAwan</h1>
+            <p>Telemetri cloud lokal · Floci :4566</p>
+          </div>
+          <div className="head-right">
+            <Status
+              state={checkState(health?.checks?.db)}
+              label={`db ${health?.checks?.db ?? "…"}`}
             />
-          ) : (
-            <p className="empty">SNS belum merespons.</p>
-          )}
-        </div>
-      </section>
+            <Status
+              state={checkState(health?.checks?.emulator)}
+              label={`emulator ${health?.checks?.emulator ?? "…"}`}
+            />
+            <span className="sync">
+              {lastSync ? `sync ${clock(lastSync)}` : "menunggu…"}
+            </span>
+          </div>
+        </header>
 
-      <section className="panel" aria-label="Audit log">
-        <h2>Aksi terakhir</h2>
-        <p className="sub">ditulis ke Postgres · 12 terbaru</p>
-        <EventFeed events={events} />
-      </section>
-    </main>
+        {banner ? (
+          <div className="banner" role="alert">
+            <span>{banner}</span>
+            <span className="banner-actions">
+              <button
+                className="action"
+                onClick={actionError && lastAction ? () => act(lastAction) : refresh}
+              >
+                Coba lagi
+              </button>
+              <button
+                className="action"
+                onClick={() => {
+                  setActionError(null);
+                  setDataError(null);
+                  setLastAction(null);
+                }}
+              >
+                Tutup
+              </button>
+            </span>
+          </div>
+        ) : null}
+
+        <section className="board" aria-label="Lima service">
+          {rows.length
+            ? rows.map((row) => (
+                <ServiceRow
+                  key={row.key}
+                  row={row}
+                  onAction={act}
+                  onOpen={() => setOpenKey(row.key)}
+                  busy={busy}
+                />
+              ))
+            : Array.from({ length: 5 }, (_, index) => (
+                <div className="skeleton" key={index} />
+              ))}
+        </section>
+
+        <section className="split">
+          <div className="panel">
+            <h2>SQS depth — 15 menit</h2>
+            <p className="sub">
+              sumber GetQueueAttributes · sampel 5 dtk
+              {age != null
+                ? ` · umur tertua ${Math.round(age)} dtk (CloudWatch 60 dtk)`
+                : ""}
+            </p>
+            {metricsError && metrics.length > 0 ? (
+              <p className="empty" role="status">
+                Grafik gagal diperbarui — menampilkan data terakhir.
+              </p>
+            ) : null}
+            <DepthChart
+              points={bySeries.get("sqs.depth") ?? []}
+              emptyMessage={
+                metricsError ? "Metrik gagal dimuat — coba lagi nanti." : undefined
+              }
+            />
+          </div>
+          <div className="panel">
+            <h2>SNS fanout</h2>
+            <p className="sub">topic → queue · subscription aktif</p>
+            {snapshot?.sns?.status === "ok" ? (
+              <FanoutGraph
+                topic={snapshot.sns.topic}
+                queue={snapshot.sqs?.queue ?? "queue"}
+                subscriptions={snapshot.sns.subscriptions}
+              />
+            ) : (
+              <p className="empty">SNS belum merespons.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="panel" aria-label="Audit log">
+          <h2>Aksi terakhir</h2>
+          <p className="sub">ditulis ke Postgres · 12 terbaru</p>
+          <EventFeed events={events} />
+        </section>
+
+        {openKey ? (
+          <ServiceDrawer
+            row={rows.find((row) => row.key === openKey)}
+            runId={runId}
+            busy={busy}
+            onAction={act}
+            onClose={closeDrawer}
+          />
+        ) : null}
+      </main>
+    </>
   );
 }
