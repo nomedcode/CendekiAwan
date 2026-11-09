@@ -1,4 +1,7 @@
 # CendekiAwan
+![Dashboard desktop](docs/screenshots/desktop.png)
+
+![Drawer mekanisme layanan](docs/screenshots/drawer.png)
 
 Dashboard telemetri live untuk lima layanan AWS yang berjalan lokal di
 [Floci](https://github.com/floci-io/floci), emulator AWS berlisensi MIT yang tidak
@@ -107,12 +110,6 @@ docker compose --profile tools up -d adminer   # http://localhost:8081
 
 Perintah dan output lengkap ada di [`docs/verification.md`](docs/verification.md):
 `compose ps` lima sehat, curl 200/201, persistensi `down`/`up`, Redis hit, dan ukuran image.
-
-## Screenshot
-
-![Dashboard desktop](docs/screenshots/desktop.png)
-
-![Drawer mekanisme layanan](docs/screenshots/drawer.png)
 
 ## Image Docker Hub
 
